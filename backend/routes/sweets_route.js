@@ -59,4 +59,6 @@ router.delete("/", async (req, res) => {
   res.status(200).json({ message: "All sweets deleted successfully" });
 });
 
+
+
 module.exports = router;
