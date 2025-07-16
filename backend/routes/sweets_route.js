@@ -59,6 +59,15 @@ router.delete("/", async (req, res) => {
   res.status(200).json({ message: "All sweets deleted successfully" });
 });
 
-
+// GET /api/sweets - View all sweets
+router.get('/', async (req, res) => {
+  try {
+    const sweets = await Sweet.find();
+    res.status(200).json(sweets);
+  } catch (error) {
+    console.error('❌ Error in GET /api/sweets:', error.message);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 module.exports = router;
