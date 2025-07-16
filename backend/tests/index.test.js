@@ -1,5 +1,6 @@
 const request = require('supertest');
 const app = require('../app');
+const mongoose = require('mongoose');
 
 describe('Server Test', () => {
 
@@ -11,4 +12,6 @@ describe('Server Test', () => {
   });
 });
 
-afterAll(async () => {});
+afterAll(async () => {
+  await mongoose.disconnect();
+});

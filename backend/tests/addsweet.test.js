@@ -1,83 +1,92 @@
-const fs = require("fs/promises");
-const request = require("supertest");
-const path = require("path");
-const app = require("../app");
-
-const SWEETS_PATH = path.join(__dirname, "../data/sweets_data.json");
+const request = require('supertest');
+const mongoose = require('mongoose');
+const Sweet = require('../models/sweet');
+const app = require('../app');
 
 let originalData = [];
 
 beforeAll(async () => {
-  // 🟡 Backup original content
-  const data = await fs.readFile(SWEETS_PATH, "utf-8");
-  originalData = JSON.parse(data);
+  // ✅ Connect to MongoDB test database
+  await mongoose.connect('mongodb://localhost:27017/sweetshop_test', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+
+  // 🟡 Backup current DB content (if any)
+  originalData = await Sweet.find().lean();
 });
 
 beforeEach(async () => {
-  // 🧪 Start fresh with only originalData
-  await fs.writeFile(SWEETS_PATH, JSON.stringify(originalData, null, 2));
+  // 🧪 Reset DB to original content before each test
+  await Sweet.deleteMany({}); // Clear MongoDB collection before each test
 });
 
-describe("Add Sweets API", () => {
-  it("should add a new sweet successfully", async () => {
+describe('Add Sweets API', () => {
+  it('should add a new sweet successfully', async () => {
     const newSweet = {
       id: 1004,
-      name: "Rasgulla",
-      category: "Milk-Based",
+      name: 'Rasgulla',
+      category: 'Milk-Based',
       price: 20,
       quantity: 25,
     };
 
-    const res = await request(app).post("/api/sweets").send(newSweet);
+    const res = await request(app).post('/api/sweets').send(newSweet);
 
     expect(res.statusCode).toBe(201);
     expect(res.body).toEqual(
       expect.objectContaining({
-        message: "Sweet added successfully",
+        message: 'Sweet added successfully',
         sweet: expect.objectContaining(newSweet),
       })
     );
   });
 
-  it("should return 400 if required fields are missing", async () => {
+  it('should return 400 if required fields are missing', async () => {
     const incompleteSweet = {
-      name: "Barfi",
+      name: 'Barfi',
       price: 15,
     };
 
-    const res = await request(app).post("/api/sweets").send(incompleteSweet);
+    const res = await request(app).post('/api/sweets').send(incompleteSweet);
 
     expect(res.statusCode).toBe(400);
-    expect(res.body).toHaveProperty("error");
+    expect(res.body).toHaveProperty('error');
   });
 
-  it("should not add duplicate sweet ID", async () => {
+  it('should not add duplicate sweet ID', async () => {
     const originalSweet = {
       id: 1004,
-      name: "Rasgulla",
-      category: "Milk-Based",
+      name: 'Rasgulla',
+      category: 'Milk-Based',
       price: 20,
       quantity: 25,
     };
 
-    await request(app).post("/api/sweets").send(originalSweet);
+    await request(app).post('/api/sweets').send(originalSweet);
 
     const duplicateSweet = {
       id: 1004,
-      name: "Rasgulla Duplicate",
-      category: "Milk-Based",
+      name: 'Rasgulla Duplicate',
+      category: 'Milk-Based',
       price: 25,
       quantity: 10,
     };
 
-    const res = await request(app).post("/api/sweets").send(duplicateSweet);
+    const res = await request(app).post('/api/sweets').send(duplicateSweet);
 
     expect(res.statusCode).toBe(409);
-    expect(res.body).toHaveProperty("error", "Sweet with this ID already exists");
+    expect(res.body).toHaveProperty('error', 'Sweet with this ID already exists');
   });
 });
 
 afterAll(async () => {
-  // 🔁 Restore original content after all tests
-  await fs.writeFile(SWEETS_PATH, JSON.stringify(originalData, null, 2));
+  // 🔁 Restore original DB content
+  await Sweet.deleteMany();
+  if (originalData.length > 0) {
+    await Sweet.insertMany(originalData);
+  }
+
+  // 🔌 Close DB connection
+  await mongoose.connection.close();
 });
