@@ -1,23 +1,6 @@
 const request = require('supertest');
-const mongoose = require('mongoose');
 const Sweet = require('../models/sweet');
 const app = require('../app');
-
-let originalData = [];
-
-beforeAll(async () => {
-  await mongoose.connect('mongodb://localhost:27017/sweetshop_test', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-
-  // Backup current DB data (if any)
-  originalData = await Sweet.find().lean();
-});
-
-beforeEach(async () => {
-  await Sweet.deleteMany(); // Clear all sweets
-});
 
 describe('Delete Sweets API', () => {
   it('should delete a sweet by ID', async () => {
@@ -62,13 +45,4 @@ describe('Delete Sweets API', () => {
     const sweets = await Sweet.find();
     expect(sweets.length).toBe(0);
   });
-});
-
-afterAll(async () => {
-  await Sweet.deleteMany();
-  if (originalData.length > 0) {
-    await Sweet.insertMany(originalData);
-  }
-
-  await mongoose.connection.close();
 });

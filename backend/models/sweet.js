@@ -15,4 +15,4 @@ const sweetSchema = new mongoose.Schema({
   quantity: { type: Number, required: true }
 });
 
-module.exports = mongoose.model('Sweet', sweetSchema);
+module.exports = mongoose.models.Sweet || mongoose.model('Sweet', sweetSchema);
