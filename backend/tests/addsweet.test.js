@@ -1,55 +1,83 @@
-const request = require('supertest');
-const app = require('../app'); // assuming your Express app is exported from app.js
+const fs = require("fs/promises");
+const request = require("supertest");
+const path = require("path");
+const app = require("../app");
 
-describe('Add Sweets API', () => {
-  it('should add a new sweet successfully', async () => {
+const SWEETS_PATH = path.join(__dirname, "../data/sweets_data.json");
+
+let originalData = [];
+
+beforeAll(async () => {
+  // 🟡 Backup original content
+  const data = await fs.readFile(SWEETS_PATH, "utf-8");
+  originalData = JSON.parse(data);
+});
+
+beforeEach(async () => {
+  // 🧪 Start fresh with only originalData
+  await fs.writeFile(SWEETS_PATH, JSON.stringify(originalData, null, 2));
+});
+
+describe("Add Sweets API", () => {
+  it("should add a new sweet successfully", async () => {
     const newSweet = {
       id: 1004,
-      name: 'Rasgulla',
-      category: 'Milk-Based',
+      name: "Rasgulla",
+      category: "Milk-Based",
       price: 20,
-      quantity: 25
+      quantity: 25,
     };
 
-    const res = await request(app)
-      .post('/api/sweets')
-      .send(newSweet);
+    const res = await request(app).post("/api/sweets").send(newSweet);
 
     expect(res.statusCode).toBe(201);
-    expect(res.body).toEqual(expect.objectContaining({
-      message: 'Sweet added successfully',
-      sweet: expect.objectContaining(newSweet)
-    }));
+    expect(res.body).toEqual(
+      expect.objectContaining({
+        message: "Sweet added successfully",
+        sweet: expect.objectContaining(newSweet),
+      })
+    );
   });
 
-  it('should return 400 if required fields are missing', async () => {
+  it("should return 400 if required fields are missing", async () => {
     const incompleteSweet = {
-      name: 'Barfi',
-      price: 15
+      name: "Barfi",
+      price: 15,
     };
 
-    const res = await request(app)
-      .post('/api/sweets')
-      .send(incompleteSweet);
+    const res = await request(app).post("/api/sweets").send(incompleteSweet);
 
     expect(res.statusCode).toBe(400);
-    expect(res.body).toHaveProperty('error');
+    expect(res.body).toHaveProperty("error");
   });
 
-  it('should not add duplicate sweet ID', async () => {
-    const duplicateSweet = {
+  it("should not add duplicate sweet ID", async () => {
+    const originalSweet = {
       id: 1004,
-      name: 'Rasgulla Duplicate',
-      category: 'Milk-Based',
-      price: 25,
-      quantity: 10
+      name: "Rasgulla",
+      category: "Milk-Based",
+      price: 20,
+      quantity: 25,
     };
 
-    const res = await request(app)
-      .post('/api/sweets')
-      .send(duplicateSweet);
+    await request(app).post("/api/sweets").send(originalSweet);
 
-    expect(res.statusCode).toBe(409); // Conflict
-    expect(res.body).toHaveProperty('error', 'Sweet with this ID already exists');
+    const duplicateSweet = {
+      id: 1004,
+      name: "Rasgulla Duplicate",
+      category: "Milk-Based",
+      price: 25,
+      quantity: 10,
+    };
+
+    const res = await request(app).post("/api/sweets").send(duplicateSweet);
+
+    expect(res.statusCode).toBe(409);
+    expect(res.body).toHaveProperty("error", "Sweet with this ID already exists");
   });
+});
+
+afterAll(async () => {
+  // 🔁 Restore original content after all tests
+  await fs.writeFile(SWEETS_PATH, JSON.stringify(originalData, null, 2));
 });

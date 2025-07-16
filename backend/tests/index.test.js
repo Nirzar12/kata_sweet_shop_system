@@ -1,7 +1,8 @@
 const request = require('supertest');
-const app = require('../index'); // path to your server.js
+const app = require('../app');
 
 describe('Server Test', () => {
+
   it('should return greeting message on GET /', async () => {
     const res = await request(app).get('/');
     
@@ -9,3 +10,5 @@ describe('Server Test', () => {
     expect(res.text).toBe('Sweet shop is up and running...');
   });
 });
+
+afterAll(async () => {});
