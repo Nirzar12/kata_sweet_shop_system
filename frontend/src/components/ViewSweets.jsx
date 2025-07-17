@@ -20,6 +20,9 @@ export default function ViewSweets() {
     priceMax: '',
   });
 
+  const [isError, setIsError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   const [showModal, setShowModal] = useState(false);
   const [restockId, setRestockId] = useState(null);
   const [restockQuantity, setRestockQuantity] = useState('');
@@ -29,16 +32,25 @@ export default function ViewSweets() {
   const [purchaseQuantity, setPurchaseQuantity] = useState('');
 
   const fetchSweets = async () => {
-    const query = new URLSearchParams();
+    setIsError(false);
+    setIsLoading(true);
+    try {
+      const query = new URLSearchParams();
+      if (filters.name) query.append('name', filters.name);
+      if (filters.category !== 'All') query.append('category', filters.category);
+      if (filters.priceMin) query.append('priceMin', filters.priceMin);
+      if (filters.priceMax) query.append('priceMax', filters.priceMax);
 
-    if (filters.name) query.append('name', filters.name);
-    if (filters.category !== 'All') query.append('category', filters.category);
-    if (filters.priceMin) query.append('priceMin', filters.priceMin);
-    if (filters.priceMax) query.append('priceMax', filters.priceMax);
-
-    const url = query.toString() ? `/search?${query.toString()}` : '/';
-    const res = await api.get(url);
-    setSweets(res.data);
+      const url = query.toString() ? `/search?${query.toString()}` : '/';
+      const res = await api.get(url);
+      setSweets(res.data);
+    } catch (err) {
+      console.error('❌ API Error:', err.message);
+      setIsError(true);
+      alert('⚠️ Failed to fetch sweets. Backend may be offline.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -48,19 +60,21 @@ export default function ViewSweets() {
   const handleDelete = async (id) => {
     try {
       await api.delete(`/${id}`);
+      alert(`✅ Sweet with ID ${id} deleted.`);
       setSweets((prev) => prev.filter((s) => s.id !== id));
     } catch (err) {
-      alert('Delete failed: ' + (err.response?.data?.error || err.message));
+      alert('❌ Delete failed: ' + (err.response?.data?.error || err.message));
     }
   };
 
   const handleDeleteAll = async () => {
-    if (!window.confirm("Are you sure you want to delete all sweets?")) return;
+    if (!window.confirm('Are you sure you want to delete all sweets?')) return;
     try {
-      await api.delete("/");
+      await api.delete('/');
+      alert('✅ All sweets deleted.');
       setSweets([]);
     } catch (err) {
-      alert("Failed to delete all: " + (err.response?.data?.error || err.message));
+      alert('❌ Failed to delete all: ' + (err.response?.data?.error || err.message));
     }
   };
 
@@ -78,10 +92,11 @@ export default function ViewSweets() {
   const submitRestock = async () => {
     try {
       await api.post('/restock', { id: restockId, quantity: Number(restockQuantity) });
+      alert('✅ Restocked successfully.');
       setShowModal(false);
       fetchSweets();
     } catch (err) {
-      alert('Restock failed: ' + (err.response?.data?.error || err.message));
+      alert('❌ Restock failed: ' + (err.response?.data?.error || err.message));
     }
   };
 
@@ -94,15 +109,17 @@ export default function ViewSweets() {
   const submitPurchase = async () => {
     try {
       await api.post('/purchase', { id: purchaseId, quantity: Number(purchaseQuantity) });
+      alert('✅ Purchase successful.');
       setShowPurchaseModal(false);
       fetchSweets();
     } catch (err) {
-      alert('Purchase failed: ' + (err.response?.data?.error || err.message));
+      alert('❌ Purchase failed: ' + (err.response?.data?.error || err.message));
     }
   };
 
   return (
     <div className="p-6 bg-[#222831] text-[#EEEEEE] min-h-screen">
+      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">🍬 Sweet Inventory</h1>
         <div className="flex gap-3">
@@ -115,6 +132,7 @@ export default function ViewSweets() {
         </div>
       </div>
 
+      {/* Filters */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         <input
           type="text"
@@ -128,7 +146,7 @@ export default function ViewSweets() {
           name="category"
           value={filters.category}
           onChange={handleInputChange}
-          className="p-2 border border-[#00ADB5] rounded bg-[#393E46] text-[#EEEEEE]"
+          className="p-2  border border-[#00ADB5] rounded bg-[#393E46] text-[#EEEEEE]"
         >
           {CATEGORY_OPTIONS.map((opt) => (
             <option key={opt} value={opt}>{opt}</option>
@@ -158,44 +176,54 @@ export default function ViewSweets() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sweets.map((s) => (
-          <div key={s.id} className="bg-[#393E46] rounded-xl border border-[#00ADB5] shadow p-5">
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold">{s.name}</h2>
-              <p className="text-sm italic text-[#AAB0B8]">{s.category}</p>
-              <p className="text-xs text-[#AAB0B8] mt-1">ID: {s.id}</p>
-            </div>
-            <div className="text-sm space-y-1">
-              <p><span className="font-medium">Price:</span> ₹{s.price} / 100gm</p>
-              <p><span className="font-medium">Quantity:</span> {s.quantity}</p>
-            </div>
-            <div className="flex justify-between items-center mt-4">
-              <div className="flex gap-2">
+      {/* Cards or Message */}
+      {isError ? (
+        <p className="text-red-400 text-center text-lg mt-10">⚠️ Failed to load sweets. Please try again later.</p>
+      ) : isLoading ? (
+        <p className="text-center mt-10 text-gray-300">⏳ Loading sweets...</p>
+      ) : sweets.length === 0 ? (
+        <p className="text-center mt-10 text-gray-400">📭 No sweets found.</p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {sweets.map((s) => (
+            <div key={s.id} className="bg-[#393E46] rounded-xl border border-[#00ADB5] shadow p-5">
+              <div className="mb-4">
+                <h2 className="text-xl font-semibold">{s.name}</h2>
+                <p className="text-sm italic text-[#AAB0B8]">{s.category}</p>
+                <p className="text-xs text-[#AAB0B8] mt-1">ID: {s.id}</p>
+              </div>
+              <div className="text-sm space-y-1">
+                <p><span className="font-medium">Price:</span> ₹{s.price} / 100gm</p>
+                <p><span className="font-medium">Quantity:</span> {s.quantity}</p>
+              </div>
+              <div className="flex justify-between items-center mt-4">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handlePurchaseClick(s.id)}
+                    className="bg-yellow-500 text-black px-3 py-1 rounded hover:bg-yellow-600 text-sm"
+                  >
+                    Purchase
+                  </button>
+                  <button
+                    onClick={() => handleRestockClick(s.id)}
+                    className="bg-[#00C897] text-white px-3 py-1 rounded hover:bg-[#00b489] text-sm"
+                  >
+                    Restock
+                  </button>
+                </div>
                 <button
-                  onClick={() => handlePurchaseClick(s.id)}
-                  className="bg-yellow-500 text-black px-3 py-1 rounded hover:bg-yellow-600 text-sm"
+                  onClick={() => handleDelete(s.id)}
+                  className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
                 >
-                  Purchase
-                </button>
-                <button
-                  onClick={() => handleRestockClick(s.id)}
-                  className="bg-[#00C897] text-white px-3 py-1 rounded hover:bg-[#00b489] text-sm"
-                >
-                  Restock
+                  Delete
                 </button>
               </div>
-              <button
-                onClick={() => handleDelete(s.id)}
-                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
-              >
-                Delete
-              </button>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
+      {/* Modal */}
       {(showModal || showPurchaseModal) && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-[#393E46] rounded-lg p-6 w-80 shadow relative text-[#EEEEEE]">
@@ -211,14 +239,14 @@ export default function ViewSweets() {
             <h2 className="text-lg font-semibold mb-3">
               {showModal ? 'Restock Sweet' : 'Purchase Sweet'}
             </h2>
-            <p className="text-sm mb-2">
-              Sweet ID: {showModal ? restockId : purchaseId}
-            </p>
+            <p className="text-sm mb-2">Sweet ID: {showModal ? restockId : purchaseId}</p>
             <input
               type="number"
               placeholder="Enter quantity"
               value={showModal ? restockQuantity : purchaseQuantity}
-              onChange={(e) => showModal ? setRestockQuantity(e.target.value) : setPurchaseQuantity(e.target.value)}
+              onChange={(e) =>
+                showModal ? setRestockQuantity(e.target.value) : setPurchaseQuantity(e.target.value)
+              }
               className="w-full p-2 border border-[#00ADB5] rounded mb-4 bg-[#222831] placeholder-[#AAB0B8] text-[#EEEEEE]"
             />
             <div className="flex justify-between">
@@ -233,7 +261,10 @@ export default function ViewSweets() {
               </button>
               <button
                 onClick={showModal ? submitRestock : submitPurchase}
-                disabled={!(showModal ? restockQuantity : purchaseQuantity) || Number(showModal ? restockQuantity : purchaseQuantity) <= 0}
+                disabled={
+                  !(showModal ? restockQuantity : purchaseQuantity) ||
+                  Number(showModal ? restockQuantity : purchaseQuantity) <= 0
+                }
                 className="bg-[#00ADB5] text-white px-4 py-2 rounded hover:bg-[#009ea4] disabled:opacity-50"
               >
                 {showModal ? 'Restock' : 'Purchase'}

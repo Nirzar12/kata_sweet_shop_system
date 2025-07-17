@@ -36,29 +36,36 @@ export default function AddSweet() {
     return errs;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const validationErrors = validate();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  const validationErrors = validate();
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    return;
+  }
+
+  try {
+    const res = await api.post("/", {
+      id: Number(form.id),
+      name: form.name.trim(),
+      category: form.category,
+      price: Number(form.price),
+      quantity: Number(form.quantity),
+    });
+
+    alert(res.data.message || "Sweet added!");
+    setForm({ id: "", name: "", category: "", price: "", quantity: "" });
+    setErrors({});
+    navigate("/");
+  } catch (err) {
+    if (!err.response) {
+      alert("Server is not responding. Please try again later.");
+    } else {
+      alert(err.response.data?.error || "Failed to add sweet. Please check inputs.");
     }
-    try {
-      const res = await api.post("/", {
-        id: Number(form.id),
-        name: form.name.trim(),
-        category: form.category,
-        price: Number(form.price),
-        quantity: Number(form.quantity),
-      });
-      alert(res.data.message || "Sweet added!");
-      setForm({ id: "", name: "", category: "", price: "", quantity: "" });
-      setErrors({});
-      navigate("/");
-    } catch (err) {
-      alert(err.response?.data?.error || "Something went wrong");
-    }
-  };
+  }
+};
+
 
   return (
     <div className="p-6 max-w-xl mx-auto bg-[#222831] text-[#EEEEEE] rounded-lg shadow-md border border-[#393E46]">

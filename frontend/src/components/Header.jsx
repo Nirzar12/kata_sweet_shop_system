@@ -5,7 +5,7 @@ const Header = () => {
     <header className="bg-[#222831] py-5 shadow-md border-b border-[#393E46] text-center rounded-b-xl">
       <Link
         to="/"
-        className="block group focus:outline-none focus:ring-2 focus:ring-[#00ADB5] rounded transition-all duration-200"
+        className="block group focus:outline-none  rounded transition-all duration-200"
         aria-label="Go to Home"
       >
         <h1 className="text-2xl md:text-3xl font-bold text-[#EEEEEE] tracking-tight group-hover:text-[#00ADB5]">
