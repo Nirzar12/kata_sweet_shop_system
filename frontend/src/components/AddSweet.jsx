@@ -20,7 +20,7 @@ export default function AddSweet() {
   });
 
   const [errors, setErrors] = useState({});
-  const navigate = useNavigate(); // ⬅️ Step 2
+  const navigate = useNavigate();
 
   const validate = () => {
     const errs = {};
@@ -54,17 +54,18 @@ export default function AddSweet() {
       alert(res.data.message || "Sweet added!");
       setForm({ id: "", name: "", category: "", price: "", quantity: "" });
       setErrors({});
-      navigate("/"); // ⬅️ Step 3: redirect to home
+      navigate("/");
     } catch (err) {
       alert(err.response?.data?.error || "Something went wrong");
     }
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <h1 className="text-3xl font-bold text-pink-700 mb-6 text-center">
+    <div className="p-6 max-w-xl mx-auto bg-[#222831] text-[#EEEEEE] rounded-lg shadow-md border border-[#393E46]">
+      <h1 className="text-2xl font-bold text-center mb-6 text-[#00ADB5]">
         ➕ Add Sweet
       </h1>
+
       <form className="space-y-4" onSubmit={handleSubmit}>
         {/* ID */}
         <div>
@@ -73,7 +74,9 @@ export default function AddSweet() {
             placeholder="Sweet ID (e.g. 1001)"
             value={form.id}
             onChange={(e) => setForm({ ...form, id: e.target.value })}
-            className="w-full border p-2 rounded"
+            className="w-full border border-[#00ADB5] p-2 rounded 
+                       bg-[#393E46] text-[#EEEEEE] placeholder-[#EEEEEE]
+                       focus:outline-none focus:ring-2 focus:ring-[#00ADB5]"
           />
           {errors.id && <p className="text-red-500 text-sm">{errors.id}</p>}
         </div>
@@ -85,7 +88,9 @@ export default function AddSweet() {
             placeholder="Sweet Name"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="w-full border p-2 rounded"
+            className="w-full border border-[#00ADB5] p-2 rounded 
+                       bg-[#393E46] text-[#EEEEEE] placeholder-[#EEEEEE]
+                       focus:outline-none focus:ring-2 focus:ring-[#00ADB5]"
           />
           {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
         </div>
@@ -95,11 +100,13 @@ export default function AddSweet() {
           <select
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
-            className="w-full border p-2 rounded"
+            className="w-full border border-[#00ADB5] p-2 rounded 
+                       bg-[#393E46] text-[#EEEEEE] 
+                       focus:outline-none focus:ring-2 focus:ring-[#00ADB5]"
           >
             <option value="">Select Category</option>
             {CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>
+              <option key={cat} value={cat} className="text-black">
                 {cat}
               </option>
             ))}
@@ -116,7 +123,9 @@ export default function AddSweet() {
             placeholder="Price (₹)"
             value={form.price}
             onChange={(e) => setForm({ ...form, price: e.target.value })}
-            className="w-full border p-2 rounded"
+            className="w-full border border-[#00ADB5] p-2 rounded 
+                       bg-[#393E46] text-[#EEEEEE] placeholder-[#EEEEEE]
+                       focus:outline-none focus:ring-2 focus:ring-[#00ADB5]"
           />
           {errors.price && (
             <p className="text-red-500 text-sm">{errors.price}</p>
@@ -130,7 +139,9 @@ export default function AddSweet() {
             placeholder="Quantity"
             value={form.quantity}
             onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-            className="w-full border p-2 rounded"
+            className="w-full border border-[#00ADB5] p-2 rounded 
+                       bg-[#393E46] text-[#EEEEEE] placeholder-[#EEEEEE]
+                       focus:outline-none focus:ring-2 focus:ring-[#00ADB5]"
           />
           {errors.quantity && (
             <p className="text-red-500 text-sm">{errors.quantity}</p>
@@ -140,7 +151,8 @@ export default function AddSweet() {
         {/* Submit */}
         <button
           type="submit"
-          className="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700 transition"
+          className="w-full bg-[#00ADB5] text-[#222831] py-2 rounded 
+                     hover:bg-[#00a0a8] transition duration-200"
         >
           Add Sweet
         </button>

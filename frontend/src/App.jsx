@@ -1,19 +1,31 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import AddSweet from './components/AddSweet';
 import ViewSweets from './components/ViewSweets';
-import Header from './components/Header'; // ⬅️ Import Header
+import Header from './components/Header';
+import BackButton from './components/BackButton';
 
-export default function App() {
+function AppContent() {
+  const location = useLocation();
+
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-yellow-50">
-        
-        <Header /> {/* ⬅️ Add Header here */}
+    <div className="min-h-screen bg-[#222831] text-[#EEEEEE]">
+      <Header />
+      <main className="p-6 max-w-7xl mx-auto">
+        {/* ✅ Only show BackButton if not on home */}
+        {location.pathname !== '/' && <BackButton />}
         <Routes>
           <Route path="/" element={<ViewSweets />} />
           <Route path="/add" element={<AddSweet />} />
         </Routes>
-      </div>
+      </main>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 }

@@ -113,4 +113,31 @@ router.post('/restock', async (req, res) => {
   }
 });
 
+router.post('/purchase', async (req, res) => {
+  const { id, quantity } = req.body;
+
+  if (!id || !quantity) {
+    return res.status(400).json({ error: 'Sweet ID and quantity are required' });
+  }
+
+  const sweet = await Sweet.findOne({ id });
+
+  if (!sweet) {
+    return res.status(404).json({ error: 'Sweet not found' });
+  }
+
+  if (sweet.quantity < quantity) {
+    return res.status(400).json({ error: 'Not enough stock available' });
+  }
+
+  sweet.quantity -= quantity;
+  await sweet.save();
+
+  res.status(200).json({
+    message: 'Purchase successful',
+    remainingQuantity: sweet.quantity,
+  });
+});
+
+
 module.exports = router;
