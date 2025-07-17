@@ -20,6 +20,10 @@ export default function ViewSweets() {
     priceMax: ''
   });
 
+  const [showModal, setShowModal] = useState(false);
+  const [restockId, setRestockId] = useState(null);
+  const [restockQuantity, setRestockQuantity] = useState('');
+
   const fetchSweets = async () => {
     const query = new URLSearchParams();
 
@@ -52,9 +56,28 @@ export default function ViewSweets() {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleRestockClick = (id) => {
+    setRestockId(id);
+    setRestockQuantity('');
+    setShowModal(true);
+  };
+
+  const submitRestock = async () => {
+    try {
+      await api.post('/restock', {
+        id: restockId,
+        quantity: Number(restockQuantity)
+      });
+      setShowModal(false);
+      fetchSweets(); // refresh updated quantity
+    } catch (err) {
+      alert('Restock failed: ' + (err.response?.data?.error || err.message));
+    }
+  };
+
   return (
     <div className="p-6">
-      {/* Title + Button */}
+      {/* Title + Add Sweet Button */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-extrabold text-pink-700">All Sweets 🍬</h1>
         <Link
@@ -114,7 +137,7 @@ export default function ViewSweets() {
         </button>
       </div>
 
-      {/* 🧁 Cards */}
+      {/* 🧁 Sweet Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {sweets.map((s) => (
           <div
@@ -138,7 +161,10 @@ export default function ViewSweets() {
               <button className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600">
                 Purchase
               </button>
-              <button className="bg-yellow-400 text-white px-3 py-1 rounded hover:bg-yellow-500">
+              <button
+                onClick={() => handleRestockClick(s.id)}
+                className="bg-yellow-400 text-white px-3 py-1 rounded hover:bg-yellow-500"
+              >
                 Restock
               </button>
               <button
@@ -151,6 +177,41 @@ export default function ViewSweets() {
           </div>
         ))}
       </div>
+
+      {/* 🧾 Restock Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-80 shadow-lg relative">
+            <h2 className="text-xl font-semibold text-pink-700 mb-4">Restock Sweet</h2>
+
+            <p className="text-sm text-gray-700 mb-2">Sweet ID: {restockId}</p>
+
+            <input
+              type="number"
+              placeholder="Enter quantity"
+              className="w-full p-2 border border-pink-300 rounded mb-4"
+              value={restockQuantity}
+              onChange={(e) => setRestockQuantity(e.target.value)}
+            />
+
+            <div className="flex justify-between">
+              <button
+                onClick={() => setShowModal(false)}
+                className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitRestock}
+                disabled={!restockQuantity || Number(restockQuantity) <= 0}
+                className="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 disabled:opacity-50"
+              >
+                Restock
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -80,4 +80,37 @@ router.get('/search', async (req, res) => {
   }
 });
 
+// Restock a sweet
+router.post('/restock', async (req, res) => {
+  const { id, quantity } = req.body;
+
+  // Validate input
+  if (!id || typeof quantity !== 'number') {
+    return res.status(400).json({ error: 'ID and quantity are required' });
+  }
+
+  if (quantity <= 0) {
+    return res.status(400).json({ error: 'Quantity must be a positive number' });
+  }
+
+  try {
+    const sweet = await Sweet.findOne({ id });
+
+    if (!sweet) {
+      return res.status(404).json({ error: 'Sweet not found' });
+    }
+
+    sweet.quantity += quantity;
+    await sweet.save();
+
+    res.status(200).json({
+      message: 'Sweet restocked successfully',
+      sweet,
+    });
+  } catch (err) {
+    console.error('Error restocking sweet:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
