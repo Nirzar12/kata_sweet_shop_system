@@ -1,17 +1,19 @@
 const mongoose = require('mongoose');
 
+// Connect to test DB before all tests
 beforeAll(async () => {
   await mongoose.connect('mongodb://localhost:27017/sweetshop_test');
 });
 
+// Disconnect after all tests
 afterAll(async () => {
   await mongoose.connection.close();
 });
 
+// Clear all collections before each test
 beforeEach(async () => {
-  // Clear all collections before each test
   const collections = mongoose.connection.collections;
-  for (const key in collections) {
-    await collections[key].deleteMany();
+  for (const collection of Object.values(collections)) {
+    await collection.deleteMany();
   }
-}); 
+});

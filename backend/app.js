@@ -1,11 +1,15 @@
 const express = require("express");
-const router = require("./routes/sweets_route");
-const app = express();
 const cors = require("cors");
+const sweetsRouter = require("./routes/sweetRoute");
 
-app.use(express.json());
-app.use(cors());
-app.use("/api/sweets", router);
+const app = express();
+
+// Middleware
+app.use(express.json()); // Parse incoming JSON
+app.use(cors()); // Enable CORS
+
+// Routes
+app.use("/api/sweets", sweetsRouter); // API route for sweets
 app.get("/", (req, res) => {
   res.send("Sweet shop is up and running...");
 });

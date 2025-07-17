@@ -3,6 +3,12 @@ const Sweet = require('../models/sweet');
 const app = require('../app');
 
 describe('Add Sweets API', () => {
+  // Reset DB before each test
+  beforeEach(async () => {
+    await Sweet.deleteMany({});
+  });
+
+  // ✅ Valid sweet
   it('should add a new sweet successfully', async () => {
     const newSweet = {
       id: 1004,
@@ -23,6 +29,7 @@ describe('Add Sweets API', () => {
     );
   });
 
+  // ❌ Missing fields
   it('should return 400 if required fields are missing', async () => {
     const incompleteSweet = {
       name: 'Barfi',
@@ -35,6 +42,7 @@ describe('Add Sweets API', () => {
     expect(res.body).toHaveProperty('error');
   });
 
+  // ❌ Duplicate ID
   it('should not add duplicate sweet ID', async () => {
     const originalSweet = {
       id: 1004,
@@ -58,5 +66,53 @@ describe('Add Sweets API', () => {
 
     expect(res.statusCode).toBe(409);
     expect(res.body).toHaveProperty('error', 'Sweet with this ID already exists');
+  });
+
+  // ❌ Invalid category
+  it('should return 400 for invalid sweet category', async () => {
+    const invalidCategorySweet = {
+      id: 1005,
+      name: 'Mystery Sweet',
+      category: 'Spicy-Based', // Invalid
+      price: 15,
+      quantity: 10,
+    };
+
+    const res = await request(app).post('/api/sweets').send(invalidCategorySweet);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty('error');
+  });
+
+  // ❌ Non-numeric price
+  it('should return 400 if price is not a number', async () => {
+    const invalidPriceSweet = {
+      id: 1006,
+      name: 'Ladoo',
+      category: 'Sugar-Based',
+      price: 'twenty', // Invalid
+      quantity: 10,
+    };
+
+    const res = await request(app).post('/api/sweets').send(invalidPriceSweet);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty('error');
+  });
+
+  // ❌ Negative quantity
+  it('should return 400 if quantity is negative', async () => {
+    const invalidQuantitySweet = {
+      id: 1007,
+      name: 'Halwa',
+      category: 'Milk-Based',
+      price: 30,
+      quantity: -5, // Invalid
+    };
+
+    const res = await request(app).post('/api/sweets').send(invalidQuantitySweet);
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toHaveProperty('error');
   });
 });

@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test jest --setupFilesAfterEnv=./backend/tests/setup.js --runInBand",
-    "dev": "nodemon backend/index.js"
+    "backend": "nodemon backend/index.js",
+    "frontend": "cd frontend && npm run dev"
   },
   "keywords": [],
   "author": "",
